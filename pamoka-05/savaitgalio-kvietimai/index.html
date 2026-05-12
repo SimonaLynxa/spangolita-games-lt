@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spangolita — Savaitgalio kvietimai</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Calibri, 'Segoe UI', sans-serif; background: #F5F0EB; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; }
+  .card { background: #fff; border-radius: 16px; max-width: 520px; width: 100%; box-shadow: 0 4px 24px rgba(44,24,16,0.12); overflow: hidden; }
+  .scene-bar { background: #2C1810; padding: 14px 20px; color: #fff; font-size: 14px; letter-spacing: 1px; }
+  .content { padding: 20px 24px 24px; }
+  .friend-bubble { background: #F9F6F2; border-radius: 12px; padding: 14px 18px; border-left: 4px solid #6B7B3A; margin-bottom: 12px; }
+  .friend-label { font-size: 11px; color: #6B7B3A; font-weight: bold; margin-bottom: 4px; }
+  .friend-text { font-size: 17px; color: #2C1810; font-family: Georgia, serif; font-style: italic; }
+  .instruction { color: #64748B; font-size: 13px; line-height: 1.4; margin-bottom: 6px; }
+  .question { color: #2C1810; font-size: 15px; font-weight: bold; margin-bottom: 16px; }
+  .option-btn { display: block; width: 100%; text-align: left; background: #fff; border: 2px solid #E8E2DA; border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; cursor: pointer; font-size: 15px; color: #2C1810; font-family: Calibri, sans-serif; transition: all 0.2s; line-height: 1.4; }
+  .option-btn:hover:not(.locked) { border-color: #4A6FA5; background: #F0F4FA; }
+  .option-btn .es { color: #B85042; font-weight: bold; }
+  .option-btn.correct { background: #E8F5E9; border-color: #6B7B3A; }
+  .option-btn.wrong { background: #FFEBEE; border-color: #B85042; }
+  .option-btn.reveal-correct { background: #E8F5E9; border-color: #6B7B3A; }
+  .feedback { border-radius: 10px; padding: 12px 16px; margin-bottom: 12px; font-size: 14px; color: #2C1810; line-height: 1.4; }
+  .feedback.good { background: #E8F5E9; border-left: 4px solid #6B7B3A; }
+  .feedback.hint { background: #FFF3E0; border-left: 4px solid #C89B3C; }
+  .next-btn { background: #B85042; color: #fff; border: none; border-radius: 10px; padding: 12px 0; width: 100%; font-size: 15px; font-family: Georgia, serif; cursor: pointer; transition: background 0.2s; }
+  .next-btn:hover { background: #8B2252; }
+  .progress-bar { max-width: 520px; width: 100%; margin-bottom: 16px; }
+  .progress-info { display: flex; justify-content: space-between; font-size: 12px; color: #64748B; margin-bottom: 4px; }
+  .progress-track { height: 6px; background: #F9F6F2; border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #B85042, #C89B3C); border-radius: 3px; transition: width 0.4s; }
+  .footer { margin-top: 12px; color: #64748B; font-size: 11px; }
+  .welcome-card, .result-card { text-align: center; padding: 40px 32px; }
+  .welcome-card h1 { font-family: Georgia, serif; color: #2C1810; font-size: 28px; margin-bottom: 4px; }
+  .welcome-card .sub { color: #B85042; font-size: 14px; letter-spacing: 3px; margin-bottom: 20px; }
+  .welcome-card .line { width: 60px; height: 3px; background: #B85042; margin: 0 auto 20px; border-radius: 2px; }
+  .welcome-card h2 { font-family: Georgia, serif; color: #2C1810; font-size: 22px; margin-bottom: 12px; }
+  .welcome-card p { color: #64748B; font-size: 15px; line-height: 1.6; margin-bottom: 24px; }
+  .start-btn { background: #B85042; color: #fff; border: none; border-radius: 10px; padding: 14px 40px; font-size: 17px; font-family: Georgia, serif; cursor: pointer; transition: background 0.2s; }
+  .start-btn:hover { background: #8B2252; }
+  .result-card .stars { font-size: 48px; margin-bottom: 12px; }
+  .result-card h2 { color: #2C1810; font-size: 26px; margin-bottom: 8px; font-family: Georgia, serif; }
+  .result-card .line { width: 60px; height: 3px; background: #C89B3C; margin: 0 auto 20px; border-radius: 2px; }
+  .result-card .score-big { font-size: 64px; font-weight: bold; color: #B85042; margin-bottom: 8px; }
+  .result-card .pct { color: #64748B; font-size: 16px; margin-bottom: 8px; }
+  .result-card .msg { background: #F9F6F2; border-radius: 10px; padding: 16px; margin: 16px 0 24px; color: #2C1810; font-size: 15px; line-height: 1.5; }
+  .restart-btn { background: #6B7B3A; color: #fff; border: none; border-radius: 10px; padding: 12px 36px; font-size: 16px; font-family: Georgia, serif; cursor: pointer; transition: background 0.2s; }
+  .restart-btn:hover { background: #4A6FA5; }
+  .fade-in { animation: fadeIn 0.35s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+<div class="footer" id="footer">spangolita.com &bull; 5 pamoka</div>
+
+<script>
+const STEPS = [
+  {
+    id: "monday_coffee",
+    scene: "☕ Pirmadienio rytas — kavinėje Madride...",
+    friend: "¡Hola! ¿Quieres un café conmigo ahora?",
+    instruction: "Sofija kviečia jus išgerti kavos. Jūs taip pat norite kavos ir turite laiko, todėl sutinkate entuziastingai.",
+    question: "Kaip energingai sutinkate ir parodote, kad jums tai puiki idėja?",
+    options: [
+      { text: "¡Sí, claro! Es una idea genial.", correct: true, feedback: "¡Perfecto! Tai skamba šiltai, natūraliai ir entuziastingai. Jūs ne tik sutinkate, bet ir parodote, kad pats pasiūlymas jums patinka." },
+      { text: "Vale, vamos.", correct: false, feedback: "Šis atsakymas nėra klaidingas, bet jis daug plokštesnis. Jūs sutinkate, tačiau beveik neparodote jokio entuziazmo." },
+      { text: "Vale, pero tengo trabajo.", correct: false, feedback: "Čia atsakymas pats sau prieštarauja. Pirmiausia sutinkate, o paskui iš karto duodate priežastį, kodėl negalite." }
+    ]
+  },
+  {
+    id: "tuesday_busy",
+    scene: "💻 Antradienio popietė — darbe...",
+    friend: "¿Tienes tiempo ahora? Quiero hablar contigo.",
+    instruction: "Sofija nori pasikalbėti dabar, bet jūs esate labai užsiėmę. Reikia mandagiai atsisakyti ir paaiškinti priežastį.",
+    question: "Kaip elegantiškai pasakote „ne“ ir paliekate galimybę grįžti prie pokalbio vėliau?",
+    options: [
+      { text: "Lo siento, no puedo ahora. Quizás luego.", correct: true, feedback: "¡Muy bien! Atsakymas aiškus ir mandagus: pirmiausia sušvelninate toną, tada pasakote priežastį ir paliekate duris atviras vėliau." },
+      { text: "No, gracias. Quizás luego.", correct: false, feedback: "Tai suprantama, bet skamba šalčiau. Šioje situacijoje daug natūraliau pradėti nuo „Lo siento“." },
+      { text: "Sí, pero no tengo tiempo.", correct: false, feedback: "Čia siunčiate du priešingus signalus: iš pradžių lyg sutinkate, o paskui iš karto paneigiate savo atsakymą." }
+    ]
+  },
+  {
+    id: "wednesday_study",
+    scene: "📚 Trečiadienio vakaras — žinutė telefone...",
+    friend: "¿Vamos a estudiar juntos mañana temprano?",
+    instruction: "Sofija siūlo rytoj anksti mokytis kartu. Jums tai puiki idėja, bet norite pasitikslinti laiką.",
+    question: "Kaip entuziastingai sutinkate ir pasitikslinate laiką?",
+    options: [
+      { text: "¡Sí! Es una idea genial. ¿A qué hora?", correct: true, feedback: "¡Genial! Jūs ne tik sutinkate, bet ir iš karto pereinate prie svarbios detalės. Taip skamba žmogus, kuris tikrai rimtai planuoja." },
+      { text: "Vale, pero más tarde es mejor.", correct: false, feedback: "Šis atsakymas gramatiškai tvarkingas, bet jūs iš karto keičiate jos pasiūlymą. Čia geriau pirmiausia sutikti ir tik tada derintis." },
+      { text: "Quizás otro día.", correct: false, feedback: "Tai mandagus atsisakymas, bet ne tas, ko reikalauja situacija. Čia reikia sutikti ir pasitikslinti laiką, o ne atidėti planą." }
+    ]
+  },
+  {
+    id: "thursday_evening",
+    scene: "🌙 Ketvirtadienis — gatvėje po darbo...",
+    friend: "¿Tienes un plan para esta noche?",
+    instruction: "Sofija klausia, ar turite planų šiam vakarui. Kol kas planų neturite ir norite sužinoti, ką ji turi omenyje.",
+    question: "Kaip atsakote ir paliekate erdvę jos pasiūlymui?",
+    options: [
+      { text: "Todavía no. ¿Por qué?", correct: true, feedback: "¡Perfecto! Trumpa, natūrali ir labai socialiai veiksminga reakcija. Jūs pasakote, kad planų dar nėra, ir atveriate kelią jos pasiūlymui." },
+      { text: "Sí, tengo trabajo.", correct: false, feedback: "Darbas gali būti priežastis negalėti, bet čia atsakymas skamba keistai ir ne visai atitinka klausimą apie vakaro planus." },
+      { text: "No, hoy no quiero salir.", correct: false, feedback: "Gramatika gera, bet atsakymas per daug uždaro pokalbį. Šioje situacijoje geriau palikti vietos tam, ką ji nori pasiūlyti." }
+    ]
+  },
+  {
+    id: "friday_restaurant",
+    scene: "🍽️ Penktadienis — darbo pabaiga...",
+    friend: "Es viernes. ¿Quieres ir al restaurante conmigo?",
+    instruction: "Penktadienio vakaras, Sofija kviečia į restoraną. Esate labai pavargę ir norite mandagiai atidėti susitikimą kitai dienai.",
+    question: "Kaip atsisakote dabar, bet išlaikote draugiškumą ateičiai?",
+    options: [
+      { text: "Lo siento, hoy no puedo. Quizás otro día.", correct: true, feedback: "¡Muy bien! Jūs aiškiai pasakote, kad problema yra šiandien, ir kartu paliekate gražią galimybę susitikti vėliau." },
+      { text: "Hoy no puedo. Necesito descansar.", correct: false, feedback: "Priežastis suprantama ir logiška, bet atsakymas per daug uždaro pokalbį. Čia trūksta draugiškos nuorodos į kitą kartą." },
+      { text: "No, gracias. Es tarde.", correct: false, feedback: "Ši priežastis čia skamba silpnai. Tokiai situacijai daug natūraliau būtų pasakyti tiesiai, kad šiandien negalite." }
+    ]
+  },
+  {
+    id: "saturday_idea",
+    scene: "✨ Šeštadienio rytas — žinutė telefone...",
+    friend: "Tengo una idea fantástica. ¿Quieres venir conmigo?",
+    instruction: "Sofija turi fantastišką idėją ir kviečia jus kartu. Esate susidomėję ir norite suprasti, koks jos planas.",
+    question: "Kaip parodote susidomėjimą dar neatsakydami galutinai?",
+    options: [
+      { text: "¿En serio? ¿Cuál es tu idea?", correct: true, feedback: "¡Genial! Reaguojate gyvai ir natūraliai, bet neskubate aklai sutikti. Pirmiausia pasidomite, ką ji iš tiesų siūlo." },
+      { text: "Sí, vamos. ¿Dónde?", correct: false, feedback: "Čia sutinkate per anksti. Dar nežinodami, koks planas, jau pasakote „taip“." },
+      { text: "Quizás. No tengo tiempo.", correct: false, feedback: "Toks atsakymas per greitai numuša jos entuziazmą. Šioje situacijoje daug natūraliau būtų pirmiausia paklausti, kokia ta idėja." }
+    ]
+  },
+  {
+    id: "sunday_park",
+    scene: "🌳 Sekmadienis — parke su Sofija...",
+    friend: "¿Tomamos un café ahora o más tarde?",
+    instruction: "Sofija klausia, ar geriate kavą dabar, ar vėliau. Jums tinka abu variantai ir norite, kad ji nuspręstų.",
+    question: "Kaip mandagiai parodote, kad jums tinka abu variantai?",
+    options: [
+      { text: "¡Vale! Tú decides.", correct: true, feedback: "¡Perfecto! Tai trumpa, draugiška ir labai natūrali reakcija. Jūs parodote lankstumą ir kartu perduodate pasirinkimą jai." },
+      { text: "Para mí está bien.", correct: false, feedback: "Ši mintis suprantama, bet ji skamba blankiau. Jūs parodote lankstumą, tačiau neperduodate sprendimo kitam žmogui taip aiškiai." },
+      { text: "Sí, no tengo tiempo.", correct: false, feedback: "Vėl atsiranda prieštaravimas: iš pradžių lyg sutinkate, o paskui sakote, kad neturite laiko." }
+    ]
+  },
+  {
+    id: "monday_morning_plan",
+    scene: "🌅 Antras pirmadienis — ofise...",
+    friend: "Entonces, ¿estudiamos juntos este fin de semana?",
+    instruction: "Sofija klausia apie mokymąsi kartu šį savaitgalį. Esate užsiėmę šį savaitgalį, bet norėtumėte mokytis kitą kartą.",
+    question: "Kaip atsisakote šio savaitgalio, bet paliekate galimybę kitam?",
+    options: [
+      { text: "Este fin de semana no puedo. Quizás otro día.", correct: true, feedback: "¡Increíble! Jūs tiksliai pasakote, kada negalite, ir tuo pačiu paliekate galimybę kitam kartui. Tai aiškus, mandagus ir socialiai brandus atsakymas." },
+      { text: "Este fin de semana no, gracias.", correct: false, feedback: "Tai neblogai, bet atsakymas per trumpas ir per šaltas. Jūs nepaliekate jokios draugiškos alternatyvos kitam kartui." },
+      { text: "Quizás no.", correct: false, feedback: "Ši frazė per miglota. Tokiose situacijose daug geriau kalbėti aiškiai ir pasakyti, kad problema yra būtent šis savaitgalis." }
+    ]
+  },
+  {
+    id: "tuesday_doubt",
+    scene: "🤔 Antradienis — prie durų...",
+    friend: "¿Quieres ir a un restaurante nuevo este sábado?",
+    instruction: "Sofija siūlo šeštadienį nueiti į naują restoraną. Tai skamba įdomiai, bet dar nežinote, ar būsite laisvi.",
+    question: "Kaip parodote susidomėjimą, bet galutinai dar neįsipareigojate?",
+    options: [
+      { text: "Quizás. Hablamos mañana.", correct: true, feedback: "¡Muy bien! Jūs parodote susidomėjimą, bet nepažadate per daug. Atsakymas skamba diplomatiškai ir palieka erdvę apsispręsti vėliau." },
+      { text: "Todavía no sé.", correct: false, feedback: "Tai suprantama, bet per silpna socialiai. Jūs neparodote nei susidomėjimo, nei draugiško noro pratęsti pokalbį." },
+      { text: "¡Sí, claro! Vamos.", correct: false, feedback: "Čia įsipareigojate per greitai. Jei dar nežinote, ar būsite laisvi, toks tvirtas „taip“ skamba pernelyg anksti." }
+    ]
+  },
+  {
+    id: "final_test",
+    scene: "🎯 Trečiadienis — galutinis testas...",
+    friend: "¿Por qué no vamos al cine temprano? ¡Es una idea fantástica!",
+    instruction: "Paskutinis kvietimas — Sofija entuziastingai kviečia į kiną anksti. Jums tinka ir norite parodyti, kad sutinkate su jos entuziazmu.",
+    question: "Kaip atsakote su panašiu entuziazmu ir patvirtinate planą?",
+    options: [
+      { text: "¡Fantástico! Vamos temprano. ¿A qué hora?", correct: true, feedback: "¡INCREÍBLE! Jūs pagaunate jos energiją, patvirtinate planą ir iš karto klausiate svarbios detalės. Tai labai gyvas ir natūralus atsakymas." },
+      { text: "Vale, buena idea.", correct: false, feedback: "Tai nėra blogai, bet skamba per silpnai šiai situacijai. Jūs nebeatspindite jos entuziazmo ir nepatvirtinate plano taip aiškiai." },
+      { text: "Sí, pero quizás tarde.", correct: false, feedback: "Čia iš karto griaunate jos pasiūlytą kryptį. Jei norite keisti planą, tai reikėtų daryti aiškiau ir švelniau." }
+    ]
+  }
+];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+let step = -1, score = 0, selected = null, showFeedback = false, shuffled = [];
+const app = document.getElementById("app");
+
+function render() {
+  if (step === -1) return renderWelcome();
+  if (step >= STEPS.length) return renderResult();
+  renderGame();
+}
+
+function renderWelcome() {
+  app.innerHTML = `
+    <div class="card fade-in">
+      <div class="welcome-card">
+        <div style="font-size:48px;margin-bottom:8px">🇪🇸</div>
+        <h1>SPANGOLITA</h1>
+        <div class="sub">I N T E R A K T Y V U S &nbsp; Ž A I D I M A S</div>
+        <div class="line"></div>
+        <h2>Savaitgalio kvietimai</h2>
+        <p>Sofija visą savaitę kviečia jus į įvairias veiklas — išgerti kavos, pasimokyti kartu, nueiti į restoraną ar į kino teatrą. Jūsų užduotis — atsakyti taip, kaip ispanai atsakytų natūraliai.<br><br><strong>10 situacijų</strong> — kiekviena su 3 atsakymo variantais.<br>Kartais teisingas atsakymas yra „ne“ — svarbu, kaip jį pasakote.<br><br>🎯 <em>Patarimas: ispanai mėgsta aiškumą, o ne ilgus aplinkkelius.</em></p>
+        <button class="start-btn" onclick="startGame()">¡Vamos! Pradėkime!</button>
+      </div>
+    </div>`;
+}
+
+function renderResult() {
+  const pct = Math.round((score / STEPS.length) * 100);
+  const stars = score >= 8 ? "⭐⭐⭐" : score >= 6 ? "⭐⭐" : score >= 4 ? "⭐" : "";
+  const msg = score === 10 ? "¡INCREÍBLE! 10 iš 10! Tobulai — be nė vienos klaidos. Jūs jau labai gerai jaučiate, kaip natūraliai reaguoti socialinėse situacijose ispaniškai."
+    : score >= 8 ? "¡Muy bien! Puikus rezultatas! Jūs jau mokate elegantiškai sakyti taip ir ne, o jūsų reakcijos skamba vis natūraliau."
+    : score >= 6 ? "¡Bien! Tvirtai! Jūs jau suprantate ne tik žodžius, bet ir socialinę nuotaiką. Dar šiek tiek praktikos — ir skambėsite dar užtikrinčiau."
+    : score >= 4 ? "Neblogai, bet dar verta pasipraktikuoti. Atkreipkite dėmesį į tai, kada geriau sakyti „no“, o kada „quizás“."
+    : "¡Ánimo! Pakartokite 5 pamokos žodyną ir bandykite dar kartą. Socialinis ritmas ateina su laiku.";
+  app.innerHTML = `
+    <div class="card fade-in">
+      <div class="result-card">
+        <div class="stars">${stars || "💪"}</div>
+        <h2>Jūsų rezultatas</h2>
+        <div class="line"></div>
+        <div class="score-big">${score}/${STEPS.length}</div>
+        <div class="pct">${pct}% teisingai</div>
+        <div class="msg">${msg}</div>
+        <button class="restart-btn" onclick="restart()">Žaisti dar kartą</button>
+      </div>
+    </div>`;
+}
+
+function renderGame() {
+  const c = STEPS[step];
+  const pct = ((step + 1) / STEPS.length) * 100;
+  let optHtml = "";
+
+  shuffled.forEach((opt, idx) => {
+    let cls = "option-btn";
+    if (showFeedback) {
+      cls += " locked";
+      if (opt.correct) cls += " correct reveal-correct";
+      else if (idx === selected && !opt.correct) cls += " wrong";
+    }
+    optHtml += `<button class="${cls}" onclick="pick(${idx})"><span class="es">${opt.text}</span></button>`;
+  });
+
+  let fbHtml = "";
+  if (showFeedback && selected !== null) {
+    const isCorrect = shuffled[selected].correct;
+    fbHtml = `<div class="feedback ${isCorrect ? "good" : "hint"}">${isCorrect ? "✅ " : "💡 "}${shuffled[selected].feedback}</div>`;
+  }
+
+  let nextHtml = "";
+  if (showFeedback) {
+    const label = step < STEPS.length - 1 ? "Toliau →" : "Žiūrėti rezultatus →";
+    nextHtml = `<button class="next-btn" onclick="next()">${label}</button>`;
+  }
+
+  app.innerHTML = `
+    <div class="progress-bar">
+      <div class="progress-info"><span>Situacija ${step + 1} iš ${STEPS.length}</span><span>${score} ✓</span></div>
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+    </div>
+    <div class="card fade-in">
+      <div class="scene-bar">${c.scene}</div>
+      <div class="content">
+        <div class="friend-bubble">
+          <div class="friend-label">👩 SOFÍA</div>
+          <div class="friend-text">${c.friend}</div>
+        </div>
+        <p class="instruction">${c.instruction}</p>
+        <p class="question">${c.question}</p>
+        ${optHtml}
+        ${fbHtml}
+        ${nextHtml}
+      </div>
+    </div>`;
+}
+
+function startGame() {
+  step = 0;
+  score = 0;
+  selected = null;
+  showFeedback = false;
+  shuffled = shuffle(STEPS[0].options);
+  render();
+}
+
+function restart() {
+  step = -1;
+  score = 0;
+  selected = null;
+  showFeedback = false;
+  render();
+}
+
+function pick(idx) {
+  if (showFeedback) return;
+  selected = idx;
+  showFeedback = true;
+  if (shuffled[idx].correct) score++;
+  render();
+}
+
+function next() {
+  step++;
+  selected = null;
+  showFeedback = false;
+  if (step < STEPS.length) shuffled = shuffle(STEPS[step].options);
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
